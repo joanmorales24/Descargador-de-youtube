@@ -1,20 +1,60 @@
-<div align="center">
-<img width="1200" height="475" alt="GHBanner" src="https://github.com/user-attachments/assets/0aa67016-6eaf-458a-adb2-6e31a0763ed6" />
-</div>
+# Descargador YouTube (Electron)
 
-# Run and deploy your AI Studio app
+Aplicación de escritorio para descargar videos de YouTube como MP4 (video+audio) o MP3 (320 kbps). Funciona 100% local, sin backend en la nube, usando yt-dlp y ffmpeg embebidos.
 
-This contains everything you need to run your app locally.
+## Características
 
-View your app in AI Studio: https://ai.studio/apps/drive/1fBjgv0hiiMScTCjBOFf7oIfvxYlmoerb
+- Descarga MP4 con audio (mezcla automática con ffmpeg)
+- Descarga MP3 a 320 kbps
+- Barra de progreso y cancelación
+- Lista de descargas recientes: abrir, re-descargar y eliminar (persistente)
+- App de escritorio con Electron (React + Vite + Express)
 
-## Run Locally
+## Requisitos
 
-**Prerequisites:**  Node.js
+- Node.js 18+ (LTS recomendado)
+- macOS o Windows
 
+## Desarrollo local
 
-1. Install dependencies:
-   `npm install`
-2. Set the `GEMINI_API_KEY` in [.env.local](.env.local) to your Gemini API key
-3. Run the app:
-   `npm run dev`
+1) Instalar dependencias
+
+    npm install
+
+2) Ejecutar en modo desarrollo (Electron + servidor + UI)
+
+    npm run dev:electron
+
+La app levanta un servidor local y abre la ventana de Electron con la UI.
+
+## Generar instaladores
+
+- macOS (arquitectura actual):
+
+   npm run dist:mac
+
+- macOS x64 (desde Mac con Node x64):
+
+   npm run dist:mac:x64
+
+- Windows x64 (cross-compile desde macOS soportado por electron-builder):
+
+   npm run dist:win:x64
+
+- Windows arm64:
+
+   npm run dist:win:arm64
+
+Los artefactos (.dmg / .exe) quedan en la carpeta `dist/`.
+
+## Notas
+
+- Los binarios `yt-dlp` y `ffmpeg` se preparan automáticamente con:
+
+   npm run setup:binaries
+
+- No se suben a Git los instaladores ni binarios (ver `.gitignore`).
+
+## Licencia
+
+Uso personal/educativo. Respeta los términos de servicio de YouTube y las leyes locales al descargar contenido.
