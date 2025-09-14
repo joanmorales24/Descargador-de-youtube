@@ -12,6 +12,12 @@ dist
 dist-ssr
 *.local
 
+# App artifacts and bundled binaries
+resources/bin/
+*.dmg
+*.exe
+*.blockmap
+
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json
