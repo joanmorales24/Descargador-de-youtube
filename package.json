@@ -1,0 +1,77 @@
+{
+  "name": "descargador-de-videos-de-youtube-ui",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "main": "electron/main.cjs",
+  "scripts": {
+    "dev": "vite",
+    "preview": "vite preview",
+    "dev:server": "npm --prefix server run dev",
+    "dev:electron": "concurrently -k \"npm:dev:server\" \"vite\" \"wait-on http://localhost:5173 && electron .\"",
+    "build:ui": "vite build",
+    "build:server": "npm --prefix server run build",
+  "build:app": "npm run setup:binaries && npm run icons && npm run build:ui && npm run build:server",
+    "dist:mac": "npm run build:app && electron-builder --mac",
+  "dist:mac:x64": "npm run build:app && npx electron-builder --mac --x64",
+  "dist:mac:universal": "npm run build:app && npx electron-builder --mac --universal",
+    "dist:win": "npm run build:app && electron-builder --win",
+  "dist:win:x64": "npm run build:app && npx electron-builder --win --x64",
+  "dist:win:arm64": "npm run build:app && npx electron-builder --win --arm64",
+    "setup:binaries": "node scripts/fetch-binaries.mjs",
+    "icons": "node scripts/generate-icons.mjs"
+  },
+  "dependencies": {
+    "cors": "^2.8.5",
+    "express": "^5.1.0",
+    "react": "^19.1.1",
+    "react-dom": "^19.1.1"
+  },
+  "devDependencies": {
+    "@types/node": "^22.14.0",
+    "concurrently": "^9.1.2",
+    "electron": "^31.2.1",
+    "electron-builder": "^24.13.3",
+    "ffmpeg-static": "^5.2.0",
+    "typescript": "~5.8.2",
+  "vite": "^6.2.0",
+  "png2icons": "^2.0.1",
+    "wait-on": "^7.2.0"
+  },
+  "build": {
+    "appId": "com.joanmorales.youtube.downloader",
+    "productName": "Descargador YouTube",
+  "artifactName": "${productName}-${version}-${arch}.${ext}",
+    "files": [
+      "dist/**",
+      "server/dist/**",
+  "server/package.json",
+      "electron/**",
+      "resources/**",
+      "package.json"
+    ],
+    "extraResources": [
+      {
+        "from": "resources/bin",
+        "to": "bin",
+        "filter": [
+          "**/*"
+        ]
+      }
+    ],
+    "asar": true,
+    "mac": {
+      "target": [
+        "dmg"
+  ],
+  "icon": "resources/icon.icns",
+      "category": "public.app-category.utilities"
+    },
+    "win": {
+      "target": [
+        "nsis"
+  ],
+  "icon": "resources/icon.ico"
+    }
+  }
+}

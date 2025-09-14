@@ -1,0 +1,5 @@
+{
+  "name": "Descargador de Videos de YouTube (UI)",
+  "description": "Una interfaz de usuario elegante para un descargador de videos de YouTube. Esta aplicación demuestra la experiencia frontend para obtener información de un video e iniciar una descarga. Nota: Debido a las limitaciones de seguridad del navegador, la descarga real de videos requiere un servicio de backend, por lo que esta aplicación simula el proceso.",
+  "requestFramePermissions": []
+}

@@ -1,0 +1,53 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Inicializando…</title>
+  <style>
+    body{background:#0b0f1a;color:#e5e7eb;font-family:system-ui,-apple-system,Segoe UI,Roboto,Ubuntu,Cantarell,Noto Sans,sans-serif;display:flex;align-items:center;justify-content:center;min-height:100vh;margin:0}
+    .card{background:#111827;border:1px solid #374151;border-radius:14px;padding:22px;max-width:720px;width:92%;box-shadow:0 10px 40px rgba(0,0,0,0.2)}
+    h1{margin:0 0 10px;font-size:22px}
+    code, pre{background:#0b1220;border:1px solid #1f2937;border-radius:8px;padding:10px;display:block;white-space:pre-wrap}
+    .muted{color:#9ca3af}
+    button{background:#ef4444;border:none;color:white;padding:10px 14px;border-radius:10px;cursor:pointer}
+    button:disabled{opacity:.7}
+  </style>
+</head>
+<body>
+  <div class="card">
+    <h1>Iniciando servidor local…</h1>
+    <p class="muted">Esperando a http://localhost:4000/api/health</p>
+    <pre id="status">Comprobando estado…</pre>
+    <div style="margin-top:12px; display:flex; gap:8px; align-items:center;">
+      <button id="retry">Reintentar</button>
+      <button id="openLogs">Abrir logs</button>
+    </div>
+  </div>
+  <script>
+    const RETRY_MS = 1200;
+    async function check() {
+      const el = document.getElementById('status');
+      try {
+        const r = await fetch('http://localhost:4000/api/health?verbose=1', { cache: 'no-store' });
+        if (!r.ok) throw new Error('HTTP ' + r.status);
+        const j = await r.json();
+        el.textContent = 'OK. Puerto: ' + j.port + '\n' +
+          'Binarios: yt-dlp=' + (j?.bins?.ytdlpExists ? 'sí' : 'no') + ', ffmpeg=' + (j?.bins?.ffmpegExists ? 'sí' : 'no') + '\n' +
+          'cwd=' + j.cwd;
+        // Si responde, recarga a la UI real
+        setTimeout(() => location.href = 'http://localhost:4000/', 500);
+      } catch (e) {
+        el.textContent = 'Servidor no disponible. Detalle: ' + (e && e.message ? e.message : e);
+        setTimeout(check, RETRY_MS);
+      }
+    }
+    document.getElementById('retry').onclick = () => check();
+    document.getElementById('openLogs').onclick = () => {
+      // Este click será interceptado por main (abre el server.log si existe)
+      window.open('logs://server');
+    };
+    check();
+  </script>
+</body>
+</html>
