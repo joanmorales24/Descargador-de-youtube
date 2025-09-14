@@ -55,6 +55,10 @@ Los artefactos (.dmg / .exe) quedan en la carpeta `dist/`.
 
 - No se suben a Git los instaladores ni binarios (ver `.gitignore`).
 
+## Autor
+
+- Joan Morales — https://joanmorales.com
+
 ## Licencia
 
 Uso personal/educativo. Respeta los términos de servicio de YouTube y las leyes locales al descargar contenido.
