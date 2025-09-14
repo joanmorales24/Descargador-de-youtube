@@ -12,6 +12,12 @@ dist
 dist-ssr
 *.local
 
+# Python virtual environments and env files
+.venv/
+.venv_old/
+.env
+.env.*
+
 # App artifacts and bundled binaries
 resources/bin/
 *.dmg
