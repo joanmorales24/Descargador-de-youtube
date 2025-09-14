@@ -25,6 +25,23 @@ app.use(cors({
 })); // CORS configurado para el frontend (5173/5174)
 app.use(express.json()); // Middleware para parsear JSON
 
+// Helper para sanear nombres de archivo (evitar caracteres inválidos en macOS/Windows/Linux)
+function sanitizeFilename(name: string, maxLen = 120): string {
+    try {
+        let s = (name || '').toString();
+        s = s.replace(/[\u0000-\u001F\u007F]/g, ''); // control chars
+        s = s.replace(/[\\/:*?"<>|]/g, ''); // Windows reserved
+        s = s.replace(/\s+/g, ' ').trim(); // espacios
+        // Evitar puntos o espacios al final (Windows)
+        s = s.replace(/[ .]+$/g, '');
+        if (!s) return '';
+        if (s.length > maxLen) s = s.slice(0, maxLen).trim();
+        return s;
+    } catch {
+        return '';
+    }
+}
+
 // Helpers para localizar binarios (dev vs empaquetado) y asegurar permisos de ejecución
 function getBinPaths() {
     const path = require('path');
@@ -281,7 +298,11 @@ app.get('/api/download', async (req, res) => {
                 const cleanupAndSend = () => {
                     try {
                         const stat = fs.statSync(outPath);
-                        res.setHeader('Content-Disposition', 'attachment; filename="audio.mp3"');
+                        const rawTitle = (req.query.title as string) || '';
+                        const base = sanitizeFilename(rawTitle) || 'audio';
+                        const filename = `${base}.mp3`;
+                        const encoded = encodeURIComponent(filename);
+                        res.setHeader('Content-Disposition', `attachment; filename="${filename}"; filename*=UTF-8''${encoded}`);
                         res.setHeader('Content-Type', 'audio/mpeg');
                         res.setHeader('Content-Length', String(stat.size));
                         const r = fs.createReadStream(outPath);
@@ -373,8 +394,11 @@ app.get('/api/download', async (req, res) => {
                 try {
                     const stat = fs.statSync(outPath);
                     const mime = extToMime[finalExt as keyof typeof extToMime] || 'application/octet-stream';
-                    const filename = `download.${finalExt}`;
-                    res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
+                    const rawTitle = (req.query.title as string) || '';
+                    const base = sanitizeFilename(rawTitle) || 'video';
+                    const filename = `${base}.${finalExt}`;
+                    const encoded = encodeURIComponent(filename);
+                    res.setHeader('Content-Disposition', `attachment; filename="${filename}"; filename*=UTF-8''${encoded}`);
                     res.setHeader('Content-Type', mime);
                     res.setHeader('Content-Length', String(stat.size));
                     const r = fs.createReadStream(outPath);

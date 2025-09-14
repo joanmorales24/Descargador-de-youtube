@@ -172,14 +172,28 @@ const App: React.FC = () => {
     }
   }, []);
   
+  const sanitizeFilename = (name: string, maxLen = 120) => {
+    try {
+      let s = (name || '').toString();
+      s = s.replace(/[\u0000-\u001F\u007F]/g, '');
+      s = s.replace(/[\\/:*?"<>|]/g, '');
+      s = s.replace(/\s+/g, ' ').trim();
+      s = s.replace(/[ .]+$/g, '');
+      if (!s) return '';
+      if (s.length > maxLen) s = s.slice(0, maxLen).trim();
+      return s;
+    } catch { return ''; }
+  };
+
   const handleDownload = useCallback((format_id: string, ext?: string, hasAudio?: boolean) => {
-  if (!videoUrl || !format_id) return;
-  const params = new URLSearchParams({ url: videoUrl, format_id, debug: '1' });
-  if (ext) params.set('ext', ext);
-  if (typeof hasAudio !== 'undefined') params.set('hasAudio', String(hasAudio));
-  const downloadUrl = `${API_URL}/api/download?${params.toString()}`;
-  void downloadWithProgress(downloadUrl);
-  }, [videoUrl]);
+    if (!videoUrl || !format_id) return;
+    const params = new URLSearchParams({ url: videoUrl, format_id, debug: '1' });
+    if (ext) params.set('ext', ext);
+    if (typeof hasAudio !== 'undefined') params.set('hasAudio', String(hasAudio));
+    if (videoInfo?.title) params.set('title', videoInfo.title);
+    const downloadUrl = `${API_URL}/api/download?${params.toString()}`;
+    void downloadWithProgress(downloadUrl, videoInfo?.title, ext);
+  }, [videoUrl, videoInfo]);
   
   const handleCloseModal = useCallback(() => {
     setIsModalOpen(false);
@@ -194,11 +208,12 @@ const App: React.FC = () => {
   const handleDownloadMp3 = useCallback(() => {
     if (!videoUrl) return;
     const params = new URLSearchParams({ url: videoUrl, audio: 'mp3', debug: '1' });
+    if (videoInfo?.title) params.set('title', videoInfo.title);
     const downloadUrl = `${API_URL}/api/download?${params.toString()}`;
-    void downloadWithProgress(downloadUrl);
-  }, [videoUrl]);
+    void downloadWithProgress(downloadUrl, videoInfo?.title, 'mp3');
+  }, [videoUrl, videoInfo]);
 
-  const downloadWithProgress = useCallback(async (url: string) => {
+  const downloadWithProgress = useCallback(async (url: string, titleHint?: string, extHint?: string) => {
     try {
       setError(null);
       setIsDownloading(true);
@@ -222,8 +237,20 @@ const App: React.FC = () => {
       const total = totalStr ? parseInt(totalStr, 10) : 0;
       const cd = response.headers.get('Content-Disposition') || '';
       const ct = response.headers.get('Content-Type') || 'application/octet-stream';
-  const match = cd.match(/filename="?([^";]+)"?/i);
-      const filename = match?.[1] || 'download';
+      const match = cd.match(/filename\*=UTF-8''([^;]+)|filename="?([^";]+)"?/i);
+      let filename = (match?.[1] || match?.[2] || '').trim();
+      try { if (filename) filename = decodeURIComponent(filename); } catch {}
+      if (!filename) {
+        const base = sanitizeFilename(titleHint || 'download') || 'download';
+        const inferredExt = (() => {
+          if (extHint) return extHint;
+          if (ct.includes('audio/mpeg')) return 'mp3';
+          if (ct.includes('video/mp4')) return 'mp4';
+          if (ct.includes('video/webm')) return 'webm';
+          return 'bin';
+        })();
+        filename = `${base}.${inferredExt}`;
+      }
   const reader = response.body?.getReader();
       if (!reader) throw new Error('No se pudo leer el flujo de respuesta.');
       const chunks: Uint8Array[] = [];
