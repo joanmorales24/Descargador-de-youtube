@@ -136,24 +136,32 @@ const App: React.FC = () => {
       }
       const data = await response.json();
       // Adapt backend yt-dlp info to VideoInfo for frontend
+      // Detectar si solo hay storyboards (no hay video/audio descargable)
+      const formats = Array.isArray(data.formats)
+        ? data.formats.map((f: any) => ({
+            format_id: f.format_id,
+            format_note: f.format_note,
+            ext: f.ext,
+            resolution: f.resolution,
+            acodec: f.acodec,
+            vcodec: f.vcodec,
+            url: f.url,
+            filesize: f.filesize_approx || f.filesize,
+          }))
+        : [];
+      const onlyStoryboards = formats.length > 0 && formats.every(f => f.format_note === 'storyboard' || f.ext === 'mhtml');
+      if (formats.length === 0 || onlyStoryboards) {
+        setError('No hay formatos descargables para este video.\nYouTube ha cambiado su sistema de streaming y yt-dlp aún no lo soporta.\nPuedes seguir el avance aquí: https://github.com/yt-dlp/yt-dlp/issues/12482');
+        setVideoInfo(null);
+        return;
+      }
       const videoInfo: VideoInfo = {
         id: data.id,
         title: data.title,
         thumbnailUrl: data.thumbnail || data.thumbnailUrl || '',
         author: data.channel || data.uploader || '',
         duration: data.duration_string || (data.duration ? `${Math.floor(data.duration/60)}:${('0'+(data.duration%60)).slice(-2)}` : ''),
-        formats: Array.isArray(data.formats)
-          ? data.formats.map((f: any) => ({
-              format_id: f.format_id,
-              format_note: f.format_note,
-              ext: f.ext,
-              resolution: f.resolution,
-              acodec: f.acodec,
-              vcodec: f.vcodec,
-              url: f.url,
-              filesize: f.filesize_approx || f.filesize,
-            }))
-          : [],
+        formats,
       };
       setVideoInfo(videoInfo);
     } catch (err) {
